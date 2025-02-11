@@ -51,6 +51,7 @@ export default function ViewVitalsPage() {
       `patient/${id}/temperature`,
       `patient/${id}/respiratory_rate`,
       `patient/${id}/oxygen_saturation`,
+      `patient/${id}/watch_heart_rate`, // Add this new topic
     ];
 
     client.on("connect", () => {
@@ -91,6 +92,11 @@ export default function ViewVitalsPage() {
               ? `${parsedMessage.spo2}%`
               : "Fetching...";
             break;
+          case "watch_heart_rate":
+            value = parsedMessage.heartRate
+              ? `${parsedMessage.heartRate} bpm`
+              : "Fetching...";
+            break;
           default:
             value = "Unknown";
         }
@@ -114,6 +120,7 @@ export default function ViewVitalsPage() {
     const numericValue = parseFloat(value);
     switch (key) {
       case "heart_rate":
+      case "watch_heart_rate": // Add this case
       case "respiratory_rate":
         return numericValue > 100
           ? "#e63946"
@@ -134,6 +141,17 @@ export default function ViewVitalsPage() {
           : "#2a9d8f";
       default:
         return "#2a9d8f";
+    }
+  };
+
+  const getDisplayName = (key) => {
+    switch (key) {
+      case "heart_rate":
+        return "ECG Heart Rate";
+      case "watch_heart_rate":
+        return "Watch Heart Rate";
+      default:
+        return key.replace(/_/g, " ");
     }
   };
 
@@ -257,7 +275,7 @@ export default function ViewVitalsPage() {
                       </div>
                       <div className="mt-6 text-center">
                         <h3 className="text-lg font-semibold text-gray-700 capitalize mb-2">
-                          {key.replace(/_/g, " ")}
+                          {getDisplayName(key)}
                         </h3>
                         <span
                           className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${
@@ -298,6 +316,7 @@ const getVitalStatus = (key, value) => {
   const numericValue = parseFloat(value);
   switch (key) {
     case "heart_rate":
+    case "watch_heart_rate": // Add this case
       return numericValue > 100 ? "High" : numericValue < 60 ? "Low" : "Normal";
     case "oxygen_saturation":
       return numericValue < 90
