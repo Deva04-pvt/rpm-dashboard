@@ -6,6 +6,7 @@ import { useRouter, useParams } from "next/navigation";
 import mqtt from "mqtt";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
+import BloodPressureCard from "../../../../../components/BloodPressureCard";
 
 export default function ViewVitalsPage() {
   const { id } = useParams();
@@ -137,74 +138,178 @@ export default function ViewVitalsPage() {
   };
 
   return (
-    <div className="flex flex-col items-center p-6 min-h-screen bg-gray-50">
-      <button
-        className="mb-4 px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition"
-        onClick={() => router.back()}
-      >
-        ← Back
-      </button>
-      <div className="bg-white p-6 shadow-xl rounded-2xl w-full max-w-3xl">
+    <div className="min-h-screen bg-gray-100">
+      {/* Top Navigation Bar */}
+      <nav className="bg-white shadow-lg p-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <button
+            className="flex items-center space-x-2 text-blue-600 hover:text-blue-800"
+            onClick={() => router.back()}
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+            <span>Back to Patients</span>
+          </button>
+          <h1 className="text-xl font-bold text-gray-800">
+            Patient Monitoring Dashboard
+          </h1>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto p-6">
         {loading ? (
-          <p className="text-gray-600 text-center text-xl animate-pulse">
-            Loading...
-          </p>
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
         ) : error ? (
-          <p className="text-red-500 text-center text-xl">{error}</p>
+          <div className="bg-red-50 p-4 rounded-lg text-red-600">{error}</div>
         ) : (
-          <>
-            <h2 className="text-2xl font-bold text-blue-700 text-center mb-4">
-              Patient Details
-            </h2>
-            <div className="grid grid-cols-2 gap-4 text-md text-gray-700 p-4 rounded-lg">
-              <p>
-                <strong>Name:</strong> {patient?.name}
-              </p>
-              <p>
-                <strong>Condition:</strong> {patient?.condition}
-              </p>
-              <p>
-                <strong>Age:</strong> {patient?.age}
-              </p>
-              <p>
-                <strong>Gender:</strong> {patient?.gender}
-              </p>
-              <p>
-                <strong>Blood Group:</strong> {patient?.blood_group}
-              </p>
-              <p>
-                <strong>Address:</strong> {patient?.address}
-              </p>
-            </div>
-            <h2 className="text-2xl font-bold text-red-600 text-center mt-6 mb-4">
-              Real-time Vitals
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 justify-center">
-              {Object.entries(vitals).map(([key, value]) => (
-                <div
-                  key={key}
-                  className="p-3 bg-white shadow-lg rounded-lg flex flex-col items-center w-40 h-40"
-                >
-                  <CircularProgressbar
-                    value={value === "Fetching..." ? 0 : parseFloat(value)}
-                    text={value === "Fetching..." ? "-" : `${value}`}
-                    styles={buildStyles({
-                      textSize: "12px",
-                      pathColor: getGaugeColor(key, value),
-                      textColor: "#333",
-                      trailColor: "#ddd",
-                    })}
-                  />
-                  <p className="mt-1 text-sm font-semibold capitalize text-center">
-                    {key.replace("_", " ")}
-                    
-                  </p>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Patient Info Card */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <div className="flex items-center space-x-4 mb-6">
+                  <div className="bg-blue-100 p-3 rounded-full">
+                    <svg
+                      className="w-6 h-6 text-blue-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-800">
+                      {patient?.name}
+                    </h2>
+                    <p className="text-sm text-gray-500">
+                      {patient?.condition}
+                    </p>
+                  </div>
                 </div>
-              ))}
+                <div className="space-y-3">
+                  <InfoRow icon="🎂" label="Age" value={patient?.age} />
+                  <InfoRow icon="⚧" label="Gender" value={patient?.gender} />
+                  <InfoRow
+                    icon="🩸"
+                    label="Blood Group"
+                    value={patient?.blood_group}
+                  />
+                  <InfoRow icon="📍" label="Address" value={patient?.address} />
+                </div>
+              </div>
             </div>
-          </>
+
+            {/* Vitals Display */}
+            <div className="lg:col-span-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {Object.entries(vitals).map(([key, value]) => {
+                  if (key === "blood_pressure") {
+                    return <BloodPressureCard key={key} value={value} />;
+                  }
+                  return (
+                    <div
+                      key={key}
+                      className="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform duration-200"
+                    >
+                      <div className="h-48 w-48 mx-auto">
+                        <CircularProgressbar
+                          value={
+                            value === "Fetching..." ? 0 : parseFloat(value)
+                          }
+                          text={value === "Fetching..." ? "..." : value}
+                          styles={buildStyles({
+                            textSize: "12px",
+                            pathColor: getGaugeColor(key, value),
+                            textColor: "#374151",
+                            trailColor: "#E5E7EB",
+                            rotation: 0.25,
+                            strokeLinecap: "round",
+                            pathTransitionDuration: 0.5,
+                            textPosition: "center",
+                            // Customize the text layout
+                            text: {
+                              fontSize: "16px",
+                              fill: "#374151",
+                              dominantBaseline: "middle",
+                              textAnchor: "middle",
+                            },
+                          })}
+                        />
+                      </div>
+                      <div className="mt-6 text-center">
+                        <h3 className="text-lg font-semibold text-gray-700 capitalize mb-2">
+                          {key.replace(/_/g, " ")}
+                        </h3>
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${
+                            getVitalStatus(key, value) === "Normal"
+                              ? "bg-green-100 text-green-800"
+                              : getVitalStatus(key, value) === "Critical"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {getVitalStatus(key, value)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
   );
 }
+
+// Helper Components
+const InfoRow = ({ icon, label, value }) => (
+  <div className="flex items-center space-x-3">
+    <span className="text-lg">{icon}</span>
+    <span className="text-gray-600">{label}:</span>
+    <span className="font-medium text-gray-800">{value}</span>
+  </div>
+);
+
+const getVitalStatus = (key, value) => {
+  if (value === "Fetching..." || value === "Unknown") return "Measuring...";
+
+  const numericValue = parseFloat(value);
+  switch (key) {
+    case "heart_rate":
+      return numericValue > 100 ? "High" : numericValue < 60 ? "Low" : "Normal";
+    case "oxygen_saturation":
+      return numericValue < 90
+        ? "Critical"
+        : numericValue < 95
+        ? "Low"
+        : "Normal";
+    case "temperature":
+      return numericValue > 38 ? "High" : numericValue < 36 ? "Low" : "Normal";
+    case "respiratory_rate":
+      return numericValue > 100 ? "High" : numericValue < 60 ? "Low" : "Normal";
+    default:
+      return "Normal";
+  }
+};
